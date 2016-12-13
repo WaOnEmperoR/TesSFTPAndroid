@@ -209,6 +209,13 @@ public class MainActivity extends AppCompatActivity {
                 SigningTask();
             }
         });
+
+        btnUpload.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                FTPUpload();
+            }
+        });
     }
 
     private void SigningTask()
@@ -217,6 +224,17 @@ public class MainActivity extends AppCompatActivity {
         {
             Single_TTD("/mnt/sdcard/FTPSample/" + list_file[i], edtFilePath.getText().toString(), edtPassphrase.getText().toString(), edtImage.getText().toString());
         }
+    }
+
+    private void FTPUpload()
+    {
+        String [] arr_path_upload = new String[list_file.length];
+        for (int i=0; i<list_file.length; i++)
+        {
+            arr_path_upload[i] = list_file[i] + "_SGN01.pdf";
+        }
+
+        new UploadSecureFTPTask().execute(arr_path_upload);
     }
 
     private void Single_TTD(String pathPDF, String pathP12, String passphrase, String imagePath)
@@ -464,7 +482,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
         protected void onPostExecute(Boolean result) {
-            edtJSON.setText((result==true)?"Berhasil":"Gagal");
+            edtJSON.setText((result==true)?"Download Berhasil":"Download Gagal");
         }
     }
 
@@ -516,7 +534,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
         protected void onPostExecute(Boolean result) {
-            edtJSON.setText((result==true)?"Berhasil":"Gagal");
+            edtJSON.setText((result==true)?"Upload Berhasil":"Upload Gagal");
         }
     }
 
