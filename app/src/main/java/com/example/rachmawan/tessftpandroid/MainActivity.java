@@ -1,23 +1,22 @@
 package com.example.rachmawan.tessftpandroid;
 
 import android.Manifest;
+import android.app.Activity;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.net.Uri;
+import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
+import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ProgressBar;
+import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.Toast;
-
-import com.jcraft.jsch.Channel;
-import com.jcraft.jsch.ChannelSftp;
-import com.jcraft.jsch.JSch;
-import com.jcraft.jsch.JSchException;
-import com.jcraft.jsch.Session;
-import com.jcraft.jsch.SftpException;
-import com.jcraft.jsch.SftpProgressMonitor;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -28,17 +27,21 @@ public class MainActivity extends AppCompatActivity {
     private Button btnUpload;
     private Button btnDownload;
     private Button btnFileChooser;
+    private Button btnSigning;
     private RadioGroup radioGroup_user;
+    private RadioButton radio_asep;
+    private RadioButton radio_lina;
+    private RadioButton radio_magdalena;
     private ProgressBar progBar_UD;
     private String pdfPath;
     private String p12Path;
     private String imgPath;
-    private EditText edtNamaFile;
+    private EditText edtFilePath;
     private EditText edtPassphrase;
-    private EditText edtLuas;
     private Button btnHitungLuas;
     private Button btnPindah;
     private Button btnQR;
+
     // Storage Permissions
     private static final int REQUEST_EXTERNAL_STORAGE = 1;
     private static String[] PERMISSIONS_STORAGE = {
@@ -46,14 +49,29 @@ public class MainActivity extends AppCompatActivity {
             Manifest.permission.WRITE_EXTERNAL_STORAGE
     };
 
-    private static final int FILE_PDF_SELECT_CODE = 1;
     private static final int FILE_P12_SELECT_CODE = 0;
-    private static final int FILE_IMAGE_SELECT_CODE = 2;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        verifyStoragePermissions(this);
+        initUI();
+        initEvent();
+    }
+
+    public static void verifyStoragePermissions(Activity activity) {
+        // Check if we have write permission
+        int permission = ActivityCompat.checkSelfPermission(activity, Manifest.permission.WRITE_EXTERNAL_STORAGE);
+
+        if (permission != PackageManager.PERMISSION_GRANTED) {
+            // We don't have permission so prompt the user
+            ActivityCompat.requestPermissions(
+                    activity,
+                    PERMISSIONS_STORAGE,
+                    REQUEST_EXTERNAL_STORAGE
+            );
+        }
     }
 
     private void showP12Chooser() {
@@ -64,10 +82,58 @@ public class MainActivity extends AppCompatActivity {
         try {
             startActivityForResult(
                     Intent.createChooser(intent, "Select P12 File"),
-                    0);
+                    FILE_P12_SELECT_CODE);
 
         } catch (android.content.ActivityNotFoundException ex) {
             Toast.makeText(this, "Please install a File Manager.", Toast.LENGTH_SHORT).show();
         }
     }
+
+    private void initUI() {
+        btnFileChooser = (Button) findViewById(R.id.btn_choose);
+        btnUpload = (Button) findViewById(R.id.btn_upload);
+        btnDownload = (Button) findViewById(R.id.btn_download);
+        btnSigning = (Button) findViewById(R.id.btn_Signing);
+        edtFilePath = (EditText) findViewById(R.id.edt_filename);
+        edtPassphrase = (EditText) findViewById(R.id.edt_passphrase);
+        progBar_UD = (ProgressBar) findViewById(R.id.progBar_updown);
+        radioGroup_user = (RadioGroup) findViewById(R.id.radio_user);
+        radio_asep = (RadioButton) findViewById(R.id.radioAsep);
+        radio_lina = (RadioButton) findViewById(R.id.radioLina);
+        radio_magdalena = (RadioButton) findViewById(R.id.radioMagdalena);
+    }
+
+    private void initEvent(){
+        btnFileChooser.setOnClickListener(new View.OnClickListener() {
+
+            @Override
+            public void onClick(View v) {
+                showP12Chooser();
+            }
+        });
+
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+
+        switch (requestCode) {
+            case FILE_P12_SELECT_CODE:
+                if (resultCode == RESULT_OK) {
+                    try {
+                        Uri uri = data.getData();
+                        Log.d(TAG, "File Uri: " + uri.toString());
+                        String path = FileUtils.getPath(MainActivity.this, uri);
+                        Log.d(TAG, "File Path: " + path);
+                        p12Path = path;
+                        edtFilePath.setText(p12Path);
+                    } catch (Exception e) {
+                        Log.e(TAG, "" + e);
+                    }
+                }
+                break;
+        }
+        super.onActivityResult(requestCode, resultCode, data);
+    }
+
 }
