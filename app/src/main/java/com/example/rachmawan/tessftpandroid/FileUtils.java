@@ -33,4 +33,13 @@ public class FileUtils {
 
         return null;
     }
+
+    public static String SplitExtensionPath(String path)
+    {
+        String balik = "";
+
+        balik = path.split("\\.")[0];
+
+        return balik;
+    }
 }

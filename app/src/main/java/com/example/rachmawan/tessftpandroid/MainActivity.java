@@ -47,6 +47,7 @@ import org.json.JSONObject;
 import org.xml.sax.InputSource;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -206,7 +207,13 @@ public class MainActivity extends AppCompatActivity {
         btnSigning.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                SigningTask();
+                try {
+                    SigningTask();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                } catch (DocumentException e) {
+                    e.printStackTrace();
+                }
             }
         });
 
@@ -218,11 +225,12 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    private void SigningTask()
-    {
+    private void SigningTask() throws IOException, DocumentException {
+
         for (int i=0; i<list_file.length; i++)
         {
-            Single_TTD("/mnt/sdcard/FTPSample/" + list_file[i], edtFilePath.getText().toString(), edtPassphrase.getText().toString(), edtImage.getText().toString());
+            StampQRCode("http://www.bppt.go.id", "/mnt/sdcard/QR_Gen/Hasil.png", "/mnt/sdcard/FTPSample/" + list_file[i], FileUtils.SplitExtensionPath("/mnt/sdcard/FTPSample/" + list_file[i]) + "_Stamped.pdf" );
+            Single_TTD(FileUtils.SplitExtensionPath("/mnt/sdcard/FTPSample/" + list_file[i]) + "_Stamped.pdf", edtFilePath.getText().toString(), edtPassphrase.getText().toString(), edtImage.getText().toString());
         }
     }
 
@@ -231,7 +239,7 @@ public class MainActivity extends AppCompatActivity {
         String [] arr_path_upload = new String[list_file.length];
         for (int i=0; i<list_file.length; i++)
         {
-            arr_path_upload[i] = list_file[i] + "_SGN01.pdf";
+            arr_path_upload[i] = FileUtils.SplitExtensionPath(list_file[i]) + "_Stamped_SGN01.pdf";
         }
 
         new UploadSecureFTPTask().execute(arr_path_upload);
@@ -239,7 +247,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void Single_TTD(String pathPDF, String pathP12, String passphrase, String imagePath)
     {
-        String result = pathPDF;
+        String result = FileUtils.SplitExtensionPath(pathPDF);
         result += "_SGN01.pdf";
 
         Toast.makeText(getApplicationContext(), result, Toast.LENGTH_LONG).show();
@@ -301,6 +309,15 @@ public class MainActivity extends AppCompatActivity {
         }
 
         Toast.makeText(getApplicationContext(), "Dokumen sukses ditanda tangani", Toast.LENGTH_LONG).show();
+    }
+
+    private void StampQRCode (String text_to_QR, String temp_img, String filePDFsrc, String filePDFdest) throws IOException, DocumentException {
+        //Upon Stamping QR Code in PDF, firstly must generate QR Code itself from text_to_QR, and save it into temp_img
+        QRCode qc = new QRCode();
+        qc.generateQRCode(text_to_QR, temp_img);
+
+        //And after QR Code image was generated, stamp it right into PDF
+        qc.manipulatePdf(filePDFsrc, filePDFdest, temp_img);
     }
 
     @Override
@@ -575,5 +592,6 @@ public class MainActivity extends AppCompatActivity {
 
         }
     }
+
 
 }
