@@ -31,4 +31,5 @@ dependencies {
     compile files('libs/itextpdf-5.5.9.jar')
     compile files('libs/bcpkix-jdk15on-154.jar')
     compile files('libs/bcprov-ext-jdk15on-154.jar')
+    compile files('libs/core-3.2.1.jar')
 }
